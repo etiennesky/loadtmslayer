@@ -35,7 +35,7 @@ PLUGINNAME = loadtmslayer
 
 PY_FILES = loadtmslayer.py loadtmslayerdialog.py __init__.py
 
-EXTRAS = icon.png metadata.txt
+EXTRAS = icon.png metadata.txt google_icon.png osm_icon.png
 
 UI_FILES = ui_loadtmslayer.py
 
@@ -69,6 +69,7 @@ deploy: compile transcompile
 	cp -vfr i18n $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
 	#cp -vfr $(HELP) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)/help
 	mkdir -p $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)/xml
+	rm -f $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)/xml/*
 	cp -vf xml/*.xml $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)/xml
 
 # The dclean target removes compiled python files from plugin directory

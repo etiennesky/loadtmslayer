@@ -1,7 +1,7 @@
 <GDAL_WMS>
-<!-- QGIS OCM Public Transport-->
+<!-- QGIS OCM Landscape -->
     <Service name="TMS">
-        <ServerUrl>http://a.tile2.opencyclemap.org/transport/${z}/${x}/${y}.png</ServerUrl>
+        <ServerUrl>http://a.tile2.opencyclemap.org/landscape/${z}/${x}/${y}.png</ServerUrl>
     </Service>
     <DataWindow>
         <UpperLeftX>-20037508.34</UpperLeftX>

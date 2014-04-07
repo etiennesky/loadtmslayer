@@ -1,4 +1,5 @@
 <GDAL_WMS>
+<!-- QGIS OnEarth MODIS TERRA daily example -->
     <Service name="TiledWMS">
         <ServerUrl>http://map1.vis.earthdata.nasa.gov/twms-geo/twms.cgi?</ServerUrl>
         <TiledGroupName>MODIS TERRA tileset</TiledGroupName>

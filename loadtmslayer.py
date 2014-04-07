@@ -66,29 +66,88 @@ class LoadTMSLayer:
         #self.iface.addPluginToMenu(u"Load TMS Layer", self.action)
 
         self.xmlDir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'xml')
-        #print(self.xmlDir)
-        #print(os.listdir(self.xmlDir))
-        group = QActionGroup(self.iface.mainWindow())
-        group.setExclusive(False)
-        QObject.connect(group, SIGNAL("triggered( QAction* )"), self.addLayer)
 
-        self.layerAddActions = []
+        # contruct display name / xmlfile list
+        names = dict()
         for xmlfile in sorted(os.listdir(self.xmlDir)):
             if not fnmatch.fnmatch(xmlfile, '*.xml'):
                 continue
-            name = xmlfile
-            if name.endswith('.xml'):
-                name = name[0:-4]
-            if name.startswith('frmt_wms_'):
-                name = name[9:]
-            elif name.startswith('frmt_twms_'):
-                name = name[10:]
 
-            action = QAction(name, group)
+            # display name
+            # first try to get name as a comment in file (e.g. <!-- QGIS Name -->)
+            name = None
+            look = False
+            for line in open(os.path.join(self.xmlDir,xmlfile)):              
+                line = line.strip()
+                if (look):
+                    if line.startswith('<!-- QGIS'):
+                        name = line[9:-3].strip()
+                        break 
+                    if line.startswith('<Service'):
+                        break
+                elif line.startswith('<GDAL_WMS>'):
+                    look = True
+            # if not found strip file prefix and suffix
+            if not name:
+                name = xmlfile
+                if name.endswith('.xml'):
+                    name = name[0:-4]
+                if name.startswith('frmt_wms_'):
+                    name = name[9:]
+                elif name.startswith('frmt_twms_'):
+                    name = name[10:]
+            
+            names[name] = xmlfile
+
+        # sort names alphabetically, OSM/Google first
+        nameKeys = sorted(names.iterkeys(), key=str.lower)
+        nameKeys1 = []
+        nameKeys2 = []
+        for name in nameKeys:
+            xmlfile = names[name]
+            if xmlfile.startswith('frmt_wms_googlemaps') or xmlfile.startswith('frmt_wms_openstreetmap'):
+                nameKeys1.append(name)
+            else:
+                nameKeys2.append(name)
+        nameKeys = nameKeys1 + nameKeys2
+
+        # loop over all xml files
+        self.layerAddActions = []
+        group = QActionGroup(self.iface.mainWindow())
+        group.setExclusive(False)
+        QObject.connect(group, SIGNAL("triggered( QAction* )"), self.addLayer)
+        prevfile = None
+        for name in nameKeys:
+            xmlfile = names[name]
+
+            # add separator after google/osm
+            if prevfile is None:
+                prevfile = xmlfile
+            if ( prevfile.startswith('frmt_wms_googlemaps') and not xmlfile.startswith('frmt_wms_googlemaps') ) \
+                    or ( prevfile.startswith('frmt_wms_openstreetmap') and not xmlfile.startswith('frmt_wms_openstreetmap') ):
+                action = QAction('', self.iface.mainWindow())
+                action.setSeparator(True)
+                self.layerAddActions.append(action)
+                self.iface.addPluginToMenu(u"Load TMS Layer", action)
+            
+            # icon
+            icon = None
+            if xmlfile.startswith('frmt_wms_googlemaps'):
+                icon = 'google_icon.png'
+            elif xmlfile.startswith('frmt_wms_openstreetmap'):
+                icon = 'osm_icon.png'
+            name = 'Add %s layer' % name
+            if icon and os.path.isfile(icon):
+                action = QAction(QIcon(icon), name, group)
+            else:
+                action = QAction(name, group)
             action.setData([xmlfile,self.xmlDir])
             self.layerAddActions.append(action)
             # Add toolbar button and menu item
             self.iface.addPluginToMenu(u"Load TMS Layer", action)
+
+            prevfile = xmlfile
+
 
     def unload(self):
         # Remove the plugin menu item and icon

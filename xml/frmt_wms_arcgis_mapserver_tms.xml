@@ -1,4 +1,5 @@
 <GDAL_WMS>
+<!-- QGIS ArcGIS MapServer Tiles -->
     <Service name="TMS">
         <ServerUrl>http://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${z}/${y}/${x}</ServerUrl>>
     </Service>

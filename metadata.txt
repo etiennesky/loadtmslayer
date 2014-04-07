@@ -23,7 +23,7 @@ email=etourigny.dev@gmail.com
 
 # Uncomment the following line and add your changelog entries:
 changelog= 0.1 initial version
-		   0.2 and descriptive names and add google/osm icons
+		   0.2 add descriptive names and google/osm icons
 
 # tags are comma separated with spaces allowed
 tags= tms,wms,OSM,openstreetmap,google 

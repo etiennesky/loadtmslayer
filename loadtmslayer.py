@@ -137,14 +137,14 @@ class LoadTMSLayer:
                 icon = 'google_icon.png'
             elif xmlfile.startswith('frmt_wms_openstreetmap'):
                 icon = 'osm_icon.png'
-            name = 'Add %s layer' % name
             if icon:
                 icon = os.path.join(self.pluginDir, icon)
+            actionName = 'Add %s layer' % name
             if icon and os.path.isfile(icon):
-                action = QAction(QIcon(icon), name, group)
+                action = QAction(QIcon(icon), actionName, group)
             else:
-                action = QAction(name, group)
-            action.setData([xmlfile,self.xmlDir])
+                action = QAction(actionName, group)
+            action.setData([os.path.join(self.xmlDir, xmlfile), name])
             self.layerAddActions.append(action)
             # Add toolbar button and menu item
             self.iface.addPluginToMenu(u"Load TMS Layer", action)
@@ -174,13 +174,12 @@ class LoadTMSLayer:
 
     def addLayer(self, action):
         d = action.data()
-        fileName = os.path.join(d[1], d[0])
-        fileInfo = QFileInfo(fileName)
-        if not fileInfo.exists():
+        fileName = d[0]
+        layerName = d[1]
+        if not os.path.exists(fileName):
             print('ERROR! file %s does not exits!' % fileName)
             return
-        baseName = fileInfo.baseName()
-        rlayer = QgsRasterLayer(fileName, baseName)
+        rlayer = QgsRasterLayer(fileName, layerName)
         if not rlayer.isValid():
             print 'Layer failed to load!'
             return

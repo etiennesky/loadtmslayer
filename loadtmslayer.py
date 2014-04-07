@@ -65,6 +65,7 @@ class LoadTMSLayer:
         #self.iface.addToolBarIcon(self.action)
         #self.iface.addPluginToMenu(u"Load TMS Layer", self.action)
 
+        self.pluginDir = os.path.dirname(os.path.realpath(__file__))
         self.xmlDir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'xml')
 
         # contruct display name / xmlfile list
@@ -137,6 +138,8 @@ class LoadTMSLayer:
             elif xmlfile.startswith('frmt_wms_openstreetmap'):
                 icon = 'osm_icon.png'
             name = 'Add %s layer' % name
+            if icon:
+                icon = os.path.join(self.pluginDir, icon)
             if icon and os.path.isfile(icon):
                 action = QAction(QIcon(icon), name, group)
             else:

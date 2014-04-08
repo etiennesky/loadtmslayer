@@ -1,5 +1,4 @@
 <GDAL_WMS>
-<!-- QGIS OCM Cycle -->
     <Service name="TMS">
         <ServerUrl>http://a.tile.opencyclemap.org/cycle/${z}/${x}/${y}.png</ServerUrl>
     </Service>

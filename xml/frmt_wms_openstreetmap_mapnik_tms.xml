@@ -1,5 +1,4 @@
 <GDAL_WMS>
-<!-- QGIS OpenStreetMap Mapnik -->
     <Service name="TMS">
         <ServerUrl>http://tile.openstreetmap.org/${z}/${x}/${y}.png</ServerUrl>
     </Service>

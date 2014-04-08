@@ -1,5 +1,4 @@
 <GDAL_WMS>
-<!-- QGIS OpenStreetMap Mapquest -->
     <Service name="TMS">
         <ServerUrl>	http://otile2.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.png</ServerUrl>
     </Service>

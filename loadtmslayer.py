@@ -28,7 +28,7 @@ import resources_rc
 # Import the code for the dialog
 from loadtmslayerdialog import LoadTMSLayerDialog
 
-import os.path, fnmatch, shutil
+import os.path, fnmatch, shutil, csv
 from xml.dom.minidom import parse
 
 from osgeo import gdal, ogr, osr
@@ -44,6 +44,8 @@ class LoadTMSLayer:
         self.plugin_dir = os.path.dirname(__file__)
         self.xml_dir = os.path.join(self.plugin_dir, 'xml')
         self.cache_dir = os.path.join(QgsApplication.qgisSettingsDirPath(), 'cache', 'gdalwmscache')
+
+        self.layerAddActions = []
 
         # initialize locale
         locale = QSettings().value("locale/userLocale")[0:2]
@@ -71,28 +73,31 @@ class LoadTMSLayer:
         #self.iface.addToolBarIcon(self.action)
         self.iface.addPluginToMenu(u"Load TMS Layer", self.action)
 
-        # contruct display name / xmlfile list
-        names = dict()
+        # read defs in xml/xmldefs.csv
+        xmldefs = dict()
+        xmlfiles = []
+        with open(os.path.join(self.xml_dir, 'xmldefs.csv'), 'rb') as csvfile:
+            for row in csv.DictReader(csvfile, delimiter=',', ):
+                if os.path.exists(os.path.join(self.xml_dir,row['file'])):
+                    xmldefs[row['file']] = row
+                    xmlfiles.append(row['file'])
+
+        # list all files in xml dir
         for xmlfile in sorted(os.listdir(self.xml_dir)):
             if not fnmatch.fnmatch(xmlfile, '*.xml'):
                 continue
 
-            # display name
-            # first try to get name as a comment in file (e.g. <!-- QGIS Name -->)
-            name = None
-            look = False
-            for line in open(os.path.join(self.xml_dir,xmlfile)):              
-                line = line.strip()
-                if (look):
-                    if line.startswith('<!-- QGIS'):
-                        name = line[9:-3].strip()
-                        break 
-                    if line.startswith('<Service'):
-                        break
-                elif line.startswith('<GDAL_WMS>'):
-                    look = True
-            # if not found strip file prefix and suffix
-            if not name:
+            # if this file is not in xmldefs add an empty entry
+            if not xmlfile in xmldefs:
+                tmpdef = xmldefs[list(xmldefs.keys())[0]]
+                xmldefs[xmlfile] = dict()
+                for key in tmpdef.iterkeys():
+                    xmldefs[xmlfile][key] = ''
+                xmldefs[xmlfile]['file'] = xmlfile
+                xmlfiles.append(xmlfile)
+
+            # if display name empty get it from file name (strip file prefix and suffix)
+            if not xmldefs[xmlfile]['name']:
                 name = xmlfile
                 if name.endswith('.xml'):
                     name = name[0:-4]
@@ -100,23 +105,9 @@ class LoadTMSLayer:
                     name = name[9:]
                 elif name.startswith('frmt_twms_'):
                     name = name[10:]
-            
-            names[name] = xmlfile
+                xmldefs[xmlfile]['name'] = name
 
-        # sort names alphabetically, OSM/Google first
-        nameKeys = sorted(names.iterkeys(), key=str.lower)
-        nameKeys1 = []
-        nameKeys2 = []
-        for name in nameKeys:
-            xmlfile = names[name]
-            if xmlfile.startswith('frmt_wms_googlemaps') or xmlfile.startswith('frmt_wms_openstreetmap'):
-                nameKeys1.append(name)
-            else:
-                nameKeys2.append(name)
-        nameKeys = nameKeys1 + nameKeys2
-
-        # loop over all xml files
-        self.layerAddActions = []
+        # add menu actions
         action = QAction('', self.iface.mainWindow())
         action.setSeparator(True)
         self.layerAddActions.append(action)
@@ -124,28 +115,20 @@ class LoadTMSLayer:
         group = QActionGroup(self.iface.mainWindow())
         group.setExclusive(False)
         QObject.connect(group, SIGNAL("triggered( QAction* )"), self.addLayer)
-        prevfile = None
-        for name in nameKeys:
-            xmlfile = names[name]
+        prevfile = xmlfiles[0]
+        # loop over all xml files
+        for xmlfile in xmlfiles:
+            name = xmldefs[xmlfile]['name']
 
-            # add separator after google/osm
-            if prevfile is None:
-                prevfile = xmlfile
-            if ( prevfile.startswith('frmt_wms_googlemaps') and not xmlfile.startswith('frmt_wms_googlemaps') ) \
-                    or ( prevfile.startswith('frmt_wms_openstreetmap') and not xmlfile.startswith('frmt_wms_openstreetmap') ):
+            # add separator between categories
+            if (prevfile != xmlfile) and (xmldefs[prevfile]['category'] != xmldefs[xmlfile]['category']):
                 action = QAction('', self.iface.mainWindow())
                 action.setSeparator(True)
                 self.layerAddActions.append(action)
                 self.iface.addPluginToMenu(u"Load TMS Layer", action)
             
             # icon
-            icon = None
-            if xmlfile.startswith('frmt_wms_googlemaps'):
-                icon = 'google_icon.png'
-            elif xmlfile.startswith('frmt_wms_openstreetmap'):
-                icon = 'osm_icon.png'
-            if icon:
-                icon = os.path.join(self.plugin_dir, icon)
+            icon = os.path.join(self.xml_dir, xmldefs[xmlfile]['icon']) if xmlfile in xmldefs else None
             actionName = 'Add %s layer' % name
             if icon and os.path.isfile(icon):
                 action = QAction(QIcon(icon), actionName, group)

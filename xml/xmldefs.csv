@@ -1,0 +1,17 @@
+file,name,icon,category
+frmt_wms_openstreetmap_mapnik_tms.xml,"OpenStreetMap Mapnik",osm_icon.png,OSM
+frmt_wms_openstreetmap_mapnik_FR.xml,"OpenStreetMap Mapnik (French)",osm_icon.png,OSM
+frmt_wms_openstreetmap_mapquest_tms.xml,"OpenStreetMap Mapquest",osm_icon.png,OSM
+frmt_wms_openstreetmap_opencyclemap_tms.xml,"OCM Cycle",osm_icon.png,OSM
+frmt_wms_openstreetmap_landscape_tms.xml,"OCM Landscape",osm_icon.png,OSM
+frmt_wms_openstreetmap_transport_tms.xml,"OCM Public Transport",osm_icon.png,OSM
+frmt_wms_googlemaps_hybrid_tms.xml,"Google Hybrid",google_icon.png,Google Maps
+frmt_wms_googlemaps_map_tms.xml,"Google Physical",google_icon.png,Google Maps
+frmt_wms_googlemaps_satellite_tms.xml,"Google Satellite",google_icon.png,Google Maps
+frmt_wms_googlemaps_terrain_tms.xml,"Google Terrain",google_icon.png,Google Maps
+frmt_wms_googlemaps_terrainstreetswater_tms.xml,"Google Terrain, Streets and Water",google_icon.png,Google Maps
+frmt_wms_arcgis_mapserver_tms.xml,"ArcGIS MapServer Tiles",,
+frmt_wms_bluemarble_s3_tms.xml,"BlueMarble Amazon S3",,
+frmt_twms_modis_terra_daily.xml,"OnEarth MODIS TERRA daily example",,
+frmt_twms_Moon.xml,"OnEarth Moon",,
+frmt_wms_virtualearth.xml,"Virtual Earth Aerial Layer",,

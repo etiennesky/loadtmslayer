@@ -1,5 +1,4 @@
 <GDAL_WMS>
-<!-- QGIS OnEarth Moon -->
     <Service name="TiledWMS">
         <ServerUrl>http://onmoon.lmmp.nasa.gov/wms.cgi?</ServerUrl>
         <TiledGroupName>LRO WAC Mosaic, LMMP</TiledGroupName>

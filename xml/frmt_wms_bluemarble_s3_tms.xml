@@ -1,5 +1,4 @@
 <GDAL_WMS>
-<!-- QGIS BlueMarble Amazon S3 -->
   <Service name="TMS">
     <ServerUrl>http://s3.amazonaws.com/com.modestmaps.bluemarble/${z}-r${y}-c${x}.jpg</ServerUrl>
   </Service>

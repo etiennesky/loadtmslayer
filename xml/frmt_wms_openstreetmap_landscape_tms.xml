@@ -1,5 +1,4 @@
 <GDAL_WMS>
-<!-- QGIS OCM Landscape -->
     <Service name="TMS">
         <ServerUrl>http://a.tile2.opencyclemap.org/landscape/${z}/${x}/${y}.png</ServerUrl>
     </Service>

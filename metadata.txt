@@ -13,7 +13,7 @@ name=Load TMS Layer
 qgisMinimumVersion=2.0
 description=This plugin loads a TMS layer (gmaps, osm, etc.) with the GDAL TMS mini-driver, using several provided examples
 about=This plugin loads a TMS layer (gmaps, osm, etc.)
-version=0.2
+version=0.3
 author=Etienne Tourigny
 email=etourigny.dev@gmail.com
 
@@ -24,6 +24,7 @@ email=etourigny.dev@gmail.com
 # Uncomment the following line and add your changelog entries:
 changelog= 0.1 initial version
 		   0.2 add descriptive names and google/osm icons
+		   0.3 change project CRS when adding layers and use file caching, add options to disable
 
 # tags are comma separated with spaces allowed
 tags= tms,wms,OSM,openstreetmap,google 

@@ -28,17 +28,23 @@ import resources_rc
 # Import the code for the dialog
 from loadtmslayerdialog import LoadTMSLayerDialog
 
-import os.path
-#import glob
-import fnmatch, re
+import os.path, fnmatch, shutil
+from xml.dom.minidom import parse
+
+from osgeo import gdal, ogr, osr
+from osgeo.gdalconst import *
 
 class LoadTMSLayer:
 
     def __init__(self, iface):
         # Save reference to the QGIS interface
         self.iface = iface
+
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
+        self.xml_dir = os.path.join(self.plugin_dir, 'xml')
+        self.cache_dir = os.path.join(QgsApplication.qgisSettingsDirPath(), 'cache', 'gdalwmscache')
+
         # initialize locale
         locale = QSettings().value("locale/userLocale")[0:2]
         localePath = os.path.join(self.plugin_dir, 'i18n', 'loadtmslayer_{}.qm'.format(locale))
@@ -57,20 +63,17 @@ class LoadTMSLayer:
         # Create action that will start plugin configuration
         self.action = QAction(
             QIcon(":/plugins/loadtmslayer/icon.png"),
-            u"Load TMS Layer", self.iface.mainWindow())
+            u"Load TMS Layer settings", self.iface.mainWindow())
         # connect the action to the run method
         self.action.triggered.connect(self.run)
 
         # Add toolbar button and menu item
         #self.iface.addToolBarIcon(self.action)
-        #self.iface.addPluginToMenu(u"Load TMS Layer", self.action)
-
-        self.pluginDir = os.path.dirname(os.path.realpath(__file__))
-        self.xmlDir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'xml')
+        self.iface.addPluginToMenu(u"Load TMS Layer", self.action)
 
         # contruct display name / xmlfile list
         names = dict()
-        for xmlfile in sorted(os.listdir(self.xmlDir)):
+        for xmlfile in sorted(os.listdir(self.xml_dir)):
             if not fnmatch.fnmatch(xmlfile, '*.xml'):
                 continue
 
@@ -78,7 +81,7 @@ class LoadTMSLayer:
             # first try to get name as a comment in file (e.g. <!-- QGIS Name -->)
             name = None
             look = False
-            for line in open(os.path.join(self.xmlDir,xmlfile)):              
+            for line in open(os.path.join(self.xml_dir,xmlfile)):              
                 line = line.strip()
                 if (look):
                     if line.startswith('<!-- QGIS'):
@@ -114,6 +117,10 @@ class LoadTMSLayer:
 
         # loop over all xml files
         self.layerAddActions = []
+        action = QAction('', self.iface.mainWindow())
+        action.setSeparator(True)
+        self.layerAddActions.append(action)
+        self.iface.addPluginToMenu(u"Load TMS Layer", action)
         group = QActionGroup(self.iface.mainWindow())
         group.setExclusive(False)
         QObject.connect(group, SIGNAL("triggered( QAction* )"), self.addLayer)
@@ -138,13 +145,13 @@ class LoadTMSLayer:
             elif xmlfile.startswith('frmt_wms_openstreetmap'):
                 icon = 'osm_icon.png'
             if icon:
-                icon = os.path.join(self.pluginDir, icon)
+                icon = os.path.join(self.plugin_dir, icon)
             actionName = 'Add %s layer' % name
             if icon and os.path.isfile(icon):
                 action = QAction(QIcon(icon), actionName, group)
             else:
                 action = QAction(actionName, group)
-            action.setData([os.path.join(self.xmlDir, xmlfile), name])
+            action.setData([self.xml_dir, xmlfile, name])
             self.layerAddActions.append(action)
             # Add toolbar button and menu item
             self.iface.addPluginToMenu(u"Load TMS Layer", action)
@@ -154,33 +161,132 @@ class LoadTMSLayer:
 
     def unload(self):
         # Remove the plugin menu item and icon
-        #self.iface.removePluginMenu(u"Load TMS Layer", self.action)
+        self.iface.removePluginMenu(u"Load TMS Layer", self.action)
         #self.iface.removeToolBarIcon(self.action)
         for action in self.layerAddActions:
             self.iface.removePluginMenu(u"Load TMS Layer", action)
 
+
     # run method that performs all the real work
     def run(self):
+        s = QSettings()
+        # set dialog options
+        self.dlg.checkBoxSetProjectCRS.setChecked( s.value('plugins/loadtmslayer/setProjectCRS', True, type=bool ) )
+        self.dlg.checkBoxUseCache.setChecked( s.value('plugins/loadtmslayer/useCache', True, type=bool ) )
+        self.dlg.checkBoxClearCache.setChecked( False )
+
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
         if result == 1:
-            # do something useful (delete the line containing pass and
-            # substitute with your code)
+            s.setValue('plugins/loadtmslayer/setProjectCRS', self.dlg.checkBoxSetProjectCRS.isChecked())
+            s.setValue('plugins/loadtmslayer/useCache', self.dlg.checkBoxUseCache.isChecked())
+            if self.dlg.checkBoxClearCache.isChecked():
+                reply = QMessageBox.question(self.iface.mainWindow(), 'Load TMS Layer', 
+                                             'Are you sure you wish to delete directory %s ?' % self.cache_dir,
+                                             QMessageBox.Yes, QMessageBox.No)
+                if reply == QMessageBox.Yes: 
+                    print('deleting cache in %s' % self.cache_dir)
+                    shutil.rmtree(self.cache_dir)
             pass
 
 
     def addLayer(self, action):
+        s = QSettings()
         d = action.data()
-        fileName = d[0]
-        layerName = d[1]
+
+        layerPath = d[0]
+        fileName = d[1]
+        layerName = d[2]
+        fileName = os.path.join(layerPath, fileName)
+
+        # if user requests cache use, setup xml file proper that setting and use that
+        fileTemp = os.path.join(self.cache_dir, os.path.basename(fileName))
+        if s.value('plugins/loadtmslayer/useCache', True, type=bool ):
+            # if file exists don't write it again
+            if not os.path.exists(fileTemp):
+                doc = parse(fileName)
+                node_gdal = doc.getElementsByTagName('GDAL_WMS')
+                if node_gdal:
+                    node_gdal = node_gdal[0]
+                    node_cache = node_gdal.getElementsByTagName('Cache')
+                    if node_cache:
+                        node_gdal.removeChild(node_cache[0])
+                    node_cache = doc.createElement('Cache')
+                    node_gdal.appendChild(doc.createTextNode('    '))
+                    node_gdal.appendChild(doc.createComment('document modified by QGIS loadtmslayer plugin'))
+                    node_gdal.appendChild(doc.createTextNode('\n    '))
+                    node_gdal.appendChild(node_cache)
+                    node_path = doc.createElement('Path')
+                    node_path.appendChild(doc.createTextNode(self.cache_dir))
+                    node_cache.appendChild(node_path)
+                    node_gdal.appendChild(doc.createTextNode('\n'))
+                    
+                    out = doc.toxml()
+                    out = out.replace('<?xml version="1.0" ?>','') + '\n'
+
+                    if not os.path.exists(self.cache_dir):
+                        os.makedirs(self.cache_dir)
+            
+                    print('writing fileTemp %s' % fileTemp)
+                    with open(fileTemp, 'w') as f:
+                        f.write(out)
+            fileName = os.path.join(layerPath, fileTemp)
+                    
         if not os.path.exists(fileName):
             print('ERROR! file %s does not exits!' % fileName)
             return
+
+        if s.value('plugins/loadtmslayer/setProjectCRS', True, type=bool ):
+            self.setProjectCRS(self.getRasterCRS(fileName))
+
         rlayer = QgsRasterLayer(fileName, layerName)
         if not rlayer.isValid():
             print 'Layer failed to load!'
             return
         QgsMapLayerRegistry.instance().addMapLayer(rlayer)
+
+        
+    # get raster CRS if possible
+    def getRasterCRS(self, fileName):
+        ds = gdal.Open(fileName)
+        if ds is None:
+            return None
+        proj = ds.GetProjectionRef()
+        if proj is None:
+            return None
+        crs = QgsCoordinateReferenceSystem()
+        if not crs.createFromWkt(proj):
+            return None
+        return crs
+
+
+    # change project CRS and OTF reprojection
+    # code taken from OpenLayers plugin
+    def setProjectCRS(self, crs):
+        if not crs:
+            return
+        mapCanvas = self.iface.mapCanvas()
+        # On the fly
+        if QGis.QGIS_VERSION_INT >= 20300:
+            mapCanvas.mapSettings().setCrsTransformEnabled(True) 
+        else:
+            mapCanvas.mapRenderer().setProjectionsEnabled(True) 
+        # CRS
+        if QGis.QGIS_VERSION_INT >= 20300:
+            theCRS = mapCanvas.mapSettings().destinationCrs()
+        elif QGis.QGIS_VERSION_INT >= 10900:
+            theCRS = mapCanvas.mapRenderer().destinationCrs()
+        else:
+            theCRS = mapCanvas.mapRenderer().destinationSrs()
+        if theCRS != crs:
+            if QGis.QGIS_VERSION_INT >= 20300:
+                mapCanvas.setDestinationCrs(crs)
+            elif QGis.QGIS_VERSION_INT >= 10900:
+                mapCanvas.mapRenderer().setDestinationCrs(crs)
+            else:
+                mapCanvas.mapRenderer().setDestinationSrs(crs)
+            mapCanvas.setMapUnits(crs.mapUnits())
+

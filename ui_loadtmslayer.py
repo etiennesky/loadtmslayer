@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_loadtmslayer.ui'
 #
-# Created: Mon Apr  7 11:53:18 2014
+# Created: Mon Apr  7 23:47:22 2014
 #      by: PyQt4 UI code generator 4.10
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,12 +26,23 @@ except AttributeError:
 class Ui_LoadTMSLayer(object):
     def setupUi(self, LoadTMSLayer):
         LoadTMSLayer.setObjectName(_fromUtf8("LoadTMSLayer"))
-        LoadTMSLayer.resize(400, 300)
+        LoadTMSLayer.resize(360, 126)
+        self.verticalLayout = QtGui.QVBoxLayout(LoadTMSLayer)
+        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.checkBoxSetProjectCRS = QtGui.QCheckBox(LoadTMSLayer)
+        self.checkBoxSetProjectCRS.setObjectName(_fromUtf8("checkBoxSetProjectCRS"))
+        self.verticalLayout.addWidget(self.checkBoxSetProjectCRS)
+        self.checkBoxUseCache = QtGui.QCheckBox(LoadTMSLayer)
+        self.checkBoxUseCache.setObjectName(_fromUtf8("checkBoxUseCache"))
+        self.verticalLayout.addWidget(self.checkBoxUseCache)
+        self.checkBoxClearCache = QtGui.QCheckBox(LoadTMSLayer)
+        self.checkBoxClearCache.setObjectName(_fromUtf8("checkBoxClearCache"))
+        self.verticalLayout.addWidget(self.checkBoxClearCache)
         self.buttonBox = QtGui.QDialogButtonBox(LoadTMSLayer)
-        self.buttonBox.setGeometry(QtCore.QRect(30, 240, 341, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
+        self.verticalLayout.addWidget(self.buttonBox)
 
         self.retranslateUi(LoadTMSLayer)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), LoadTMSLayer.accept)
@@ -40,4 +51,7 @@ class Ui_LoadTMSLayer(object):
 
     def retranslateUi(self, LoadTMSLayer):
         LoadTMSLayer.setWindowTitle(_translate("LoadTMSLayer", "LoadTMSLayer", None))
+        self.checkBoxSetProjectCRS.setText(_translate("LoadTMSLayer", "Set project CRS to layer CRS when adding layer", None))
+        self.checkBoxUseCache.setText(_translate("LoadTMSLayer", "Enable local disk cache - allows for offline operation", None))
+        self.checkBoxClearCache.setText(_translate("LoadTMSLayer", "Clear disk cache", None))
 

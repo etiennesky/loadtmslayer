@@ -94,6 +94,7 @@ class LoadTMSLayer:
                 for key in tmpdef.iterkeys():
                     xmldefs[xmlfile][key] = ''
                 xmldefs[xmlfile]['file'] = xmlfile
+                xmldefs[xmlfile]['category'] = '_user_'
                 xmlfiles.append(xmlfile)
 
             # if display name empty get it from file name (strip file prefix and suffix)
@@ -108,21 +109,20 @@ class LoadTMSLayer:
                 xmldefs[xmlfile]['name'] = name
 
         # add menu actions
-        action = QAction('', self.iface.mainWindow())
-        action.setSeparator(True)
-        self.layerAddActions.append(action)
-        self.iface.addPluginToMenu(u"Load TMS Layer", action)
         group = QActionGroup(self.iface.mainWindow())
         group.setExclusive(False)
         QObject.connect(group, SIGNAL("triggered( QAction* )"), self.addLayer)
-        prevfile = xmlfiles[0]
+        prevfile = ''
         # loop over all xml files
         for xmlfile in xmlfiles:
             name = xmldefs[xmlfile]['name']
 
             # add separator between categories
-            if (prevfile != xmlfile) and (xmldefs[prevfile]['category'] != xmldefs[xmlfile]['category']):
-                action = QAction('', self.iface.mainWindow())
+            if (prevfile != xmlfile) and (not prevfile or (xmldefs[prevfile]['category'] != xmldefs[xmlfile]['category'])):
+                cat = xmldefs[xmlfile]['category']
+                if cat == '_user_':
+                    cat = ''
+                action = QAction(cat, self.iface.mainWindow())
                 action.setSeparator(True)
                 self.layerAddActions.append(action)
                 self.iface.addPluginToMenu(u"Load TMS Layer", action)

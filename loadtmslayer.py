@@ -28,7 +28,7 @@ import resources_rc
 # Import the code for the dialog
 from loadtmslayerdialog import LoadTMSLayerDialog
 
-import os.path, fnmatch, shutil, csv
+import os.path, fnmatch, shutil, csv, re
 from xml.dom.minidom import parse
 
 from osgeo import gdal, ogr, osr
@@ -185,49 +185,43 @@ class LoadTMSLayer:
         layerName = d[2]
         fileName = os.path.join(layerPath, fileName)
 
-        # if user requests cache use, setup xml file proper that setting and use that
-        fileTemp = os.path.join(self.cache_dir, os.path.basename(fileName))
-        if s.value('plugins/loadtmslayer/useCache', True, type=bool ):
-            # if file exists don't write it again
-            if not os.path.exists(fileTemp):
-                doc = parse(fileName)
-                node_gdal = doc.getElementsByTagName('GDAL_WMS')
-                if node_gdal:
-                    node_gdal = node_gdal[0]
-                    node_cache = node_gdal.getElementsByTagName('Cache')
-                    if node_cache:
-                        node_gdal.removeChild(node_cache[0])
-                    node_cache = doc.createElement('Cache')
-                    node_gdal.appendChild(doc.createTextNode('    '))
-                    node_gdal.appendChild(doc.createComment('document modified by QGIS loadtmslayer plugin'))
-                    node_gdal.appendChild(doc.createTextNode('\n    '))
-                    node_gdal.appendChild(node_cache)
-                    node_path = doc.createElement('Path')
-                    node_path.appendChild(doc.createTextNode(self.cache_dir))
-                    node_cache.appendChild(node_path)
-                    node_gdal.appendChild(doc.createTextNode('\n'))
-                    
-                    out = doc.toxml()
-                    out = out.replace('<?xml version="1.0" ?>','') + '\n'
-
-                    if not os.path.exists(self.cache_dir):
-                        os.makedirs(self.cache_dir)
-            
-                    print('writing fileTemp %s' % fileTemp)
-                    with open(fileTemp, 'w') as f:
-                        f.write(out)
-            fileName = os.path.join(layerPath, fileTemp)
-                    
+        # read xml file
         if not os.path.exists(fileName):
             print('ERROR! file %s does not exits!' % fileName)
+        doc = parse(fileName)
+        node_gdal = doc.getElementsByTagName('GDAL_WMS')
+        if not node_gdal:
+            print('ERROR! file %s does not containt GDAL_WMS node!' % fileName)
             return
+
+        # edit Cache node
+        node_gdal = node_gdal[0]
+        node_cache = node_gdal.getElementsByTagName('Cache')
+        # remove Cache node so we ca either disable Cache or set the proper Cache options
+        if node_cache:
+            node_gdal.removeChild(node_cache[0])
+        if s.value('plugins/loadtmslayer/useCache', True, type=bool ):
+            if not os.path.exists(self.cache_dir):
+                os.makedirs(self.cache_dir)
+            node_cache = doc.createElement('Cache')
+            node_gdal.appendChild(node_cache)
+            node_path = doc.createElement('Path')
+            node_path.appendChild(doc.createTextNode(self.cache_dir))
+            node_cache.appendChild(node_path)
+                    
+        # convert xml doc to a string
+        uri = doc.toxml()
+        uri = uri.replace('<?xml version="1.0" ?>','')
+        uri = ' '.join(uri.split())
 
         if s.value('plugins/loadtmslayer/setProjectCRS', True, type=bool ):
             self.setProjectCRS(self.getRasterCRS(fileName))
 
-        rlayer = QgsRasterLayer(fileName, layerName)
+        # load string as gdal layer
+        #rlayer = QgsRasterLayer(fileName, layerName)
+        rlayer = QgsRasterLayer(uri, layerName, 'gdal')
         if not rlayer.isValid():
-            print 'Layer failed to load!'
+            print('Layer failed to load: [%s]' %uri)
             return
         QgsMapLayerRegistry.instance().addMapLayer(rlayer)
 

@@ -5,11 +5,6 @@ frmt_wms_openstreetmap_mapquest_tms.xml,"OSM Mapquest",osm_icon.png,OpenStreetMa
 frmt_wms_openstreetmap_opencyclemap_tms.xml,"OCM Cycle",osm_icon.png,OpenStreetMap
 frmt_wms_openstreetmap_landscape_tms.xml,"OCM Landscape",osm_icon.png,OpenStreetMap
 frmt_wms_openstreetmap_transport_tms.xml,"OCM Public Transport",osm_icon.png,OpenStreetMap
-frmt_wms_googlemaps_hybrid_tms.xml,"Google Hybrid",google_icon.png,"Google Maps"
-frmt_wms_googlemaps_map_tms.xml,"Google Physical",google_icon.png,"Google Maps"
-frmt_wms_googlemaps_satellite_tms.xml,"Google Satellite",google_icon.png,"Google Maps"
-frmt_wms_googlemaps_terrain_tms.xml,"Google Terrain",google_icon.png,"Google Maps"
-frmt_wms_googlemaps_terrainstreetswater_tms.xml,"Google Terrain, Streets and Water",google_icon.png,"Google Maps"
 frmt_wms_globalforestchange_lossgainextend_tms.xml,"GFC Forest Loss/Extent/Gain (R/G/B)",earthenginepartners_icon.png,"Global Forest Change"
 frmt_wms_globalforestchange_lossalpha_tms.xml,"GFC Forest Cover Loss 2000-2012 (Transparent)",earthenginepartners_icon.png,"Global Forest Change"
 frmt_wms_globalforestchange_gainalpha_tms.xml,"GFC Forest Cover Gain 2000-2012 (Transparent)",earthenginepartners_icon.png,"Global Forest Change"

@@ -27,7 +27,7 @@ changelog= 0.1 initial version
 		   0.3 change project CRS when adding layers and use file caching, add options to disable
 
 # tags are comma separated with spaces allowed
-tags= tms,wms,OSM,openstreetmap,google 
+tags= tms,wms,OSM,openstreetmap
 
 homepage=
 tracker=

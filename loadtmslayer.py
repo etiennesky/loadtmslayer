@@ -28,24 +28,32 @@ import resources_rc
 # Import the code for the dialog
 from loadtmslayerdialog import LoadTMSLayerDialog
 
+from tilemapscalelevels import TileMapScaleLevels
+
 import os.path, fnmatch, shutil, csv, re
 from xml.dom.minidom import parse
 
 from osgeo import gdal, ogr, osr
 from osgeo.gdalconst import *
 
+
+#-----------------------------------------------
+# TODO fix scaleChanged when changing CRS
+# TODO fix scaleChanged when using EPSG:4326 (if possible)
+# TODO add options min/max zoom level, dpi, zoom UI
+#-----------------------------------------------
+
 class LoadTMSLayer:
 
     def __init__(self, iface):
         # Save reference to the QGIS interface
         self.iface = iface
+        self.canvas = self.iface.mapCanvas()
 
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         self.xml_dir = os.path.join(self.plugin_dir, 'xml')
         self.cache_dir = os.path.join(QgsApplication.qgisSettingsDirPath(), 'cache', 'gdalwmscache')
-
-        self.layerAddActions = []
 
         # initialize locale
         locale = QSettings().value("locale/userLocale")[0:2]
@@ -61,7 +69,12 @@ class LoadTMSLayer:
         # Create the dialog (after translation) and keep reference
         self.dlg = LoadTMSLayerDialog()
 
+
     def initGui(self):
+        self.layerAddActions = []
+        self.scaleCalculator = TileMapScaleLevels(maxZoomlevel=18, minZoomlevel=0, dpi=self.iface.mainWindow().physicalDpiX())
+        self.canvas.scaleChanged.connect(self.scaleChanged)
+
         # Create action that will start plugin configuration
         self.action = QAction(
             QIcon(":/plugins/loadtmslayer/icon.png"),
@@ -155,6 +168,7 @@ class LoadTMSLayer:
         s = QSettings()
         # set dialog options
         self.dlg.checkBoxSetProjectCRS.setChecked( s.value('plugins/loadtmslayer/setProjectCRS', True, type=bool ) )
+        self.dlg.checkBoxUpdateScale.setChecked( s.value('plugins/loadtmslayer/updateScale', False, type=bool ) )
         self.dlg.checkBoxUseCache.setChecked( s.value('plugins/loadtmslayer/useCache', True, type=bool ) )
         self.dlg.checkBoxClearCache.setChecked( False )
 
@@ -165,6 +179,7 @@ class LoadTMSLayer:
         # See if OK was pressed
         if result == 1:
             s.setValue('plugins/loadtmslayer/setProjectCRS', self.dlg.checkBoxSetProjectCRS.isChecked())
+            s.setValue('plugins/loadtmslayer/updateScale', self.dlg.checkBoxUpdateScale.isChecked())
             s.setValue('plugins/loadtmslayer/useCache', self.dlg.checkBoxUseCache.isChecked())
             if self.dlg.checkBoxClearCache.isChecked():
                 reply = QMessageBox.question(self.iface.mainWindow(), 'Load TMS Layer', 
@@ -245,7 +260,7 @@ class LoadTMSLayer:
     def setProjectCRS(self, crs):
         if not crs:
             return
-        mapCanvas = self.iface.mapCanvas()
+        mapCanvas = self.canvas
         # On the fly
         if QGis.QGIS_VERSION_INT >= 20300:
             mapCanvas.mapSettings().setCrsTransformEnabled(True) 
@@ -266,4 +281,20 @@ class LoadTMSLayer:
             else:
                 mapCanvas.mapRenderer().setDestinationSrs(crs)
             mapCanvas.setMapUnits(crs.mapUnits())
+
+    # this code and TileMapScaleLevels taken from TileMapScalePlugin
+    def scaleChanged(self, scale):
+        #if self.dock.checkBoxIsActive.isChecked():
+        if QSettings().value('plugins/loadtmslayer/updateScale', False, type=bool ):
+            ## Disconnect to prevent infinite scaling loop
+            self.canvas.scaleChanged.disconnect(self.scaleChanged)
+
+            zoomlevel = self.scaleCalculator.getZoomlevel(scale)
+            if zoomlevel:
+                newScale = self.scaleCalculator.getScale(zoomlevel)
+                if abs(scale-newScale)>0.00000001:
+                    self.canvas.zoomScale(newScale)
+                    #print('scaleChanged from %f to %f diff=%f' % (scale,newScale,scale-newScale))
+
+            self.canvas.scaleChanged.connect(self.scaleChanged)
 

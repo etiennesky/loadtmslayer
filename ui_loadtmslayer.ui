@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>360</width>
-    <height>126</height>
+    <width>419</width>
+    <height>153</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,6 +18,13 @@
     <widget class="QCheckBox" name="checkBoxSetProjectCRS">
      <property name="text">
       <string>Set project CRS to layer CRS when adding layer</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="checkBoxUpdateScale">
+     <property name="text">
+      <string>Set canvas scale to closest matching tile scale when zooming</string>
      </property>
     </widget>
    </item>

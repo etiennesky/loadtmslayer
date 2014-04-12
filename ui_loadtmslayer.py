@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_loadtmslayer.ui'
 #
-# Created: Mon Apr  7 23:47:22 2014
+# Created: Thu Apr 10 01:15:51 2014
 #      by: PyQt4 UI code generator 4.10
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,12 +26,15 @@ except AttributeError:
 class Ui_LoadTMSLayer(object):
     def setupUi(self, LoadTMSLayer):
         LoadTMSLayer.setObjectName(_fromUtf8("LoadTMSLayer"))
-        LoadTMSLayer.resize(360, 126)
+        LoadTMSLayer.resize(419, 153)
         self.verticalLayout = QtGui.QVBoxLayout(LoadTMSLayer)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.checkBoxSetProjectCRS = QtGui.QCheckBox(LoadTMSLayer)
         self.checkBoxSetProjectCRS.setObjectName(_fromUtf8("checkBoxSetProjectCRS"))
         self.verticalLayout.addWidget(self.checkBoxSetProjectCRS)
+        self.checkBoxUpdateScale = QtGui.QCheckBox(LoadTMSLayer)
+        self.checkBoxUpdateScale.setObjectName(_fromUtf8("checkBoxUpdateScale"))
+        self.verticalLayout.addWidget(self.checkBoxUpdateScale)
         self.checkBoxUseCache = QtGui.QCheckBox(LoadTMSLayer)
         self.checkBoxUseCache.setObjectName(_fromUtf8("checkBoxUseCache"))
         self.verticalLayout.addWidget(self.checkBoxUseCache)
@@ -52,6 +55,7 @@ class Ui_LoadTMSLayer(object):
     def retranslateUi(self, LoadTMSLayer):
         LoadTMSLayer.setWindowTitle(_translate("LoadTMSLayer", "LoadTMSLayer", None))
         self.checkBoxSetProjectCRS.setText(_translate("LoadTMSLayer", "Set project CRS to layer CRS when adding layer", None))
+        self.checkBoxUpdateScale.setText(_translate("LoadTMSLayer", "Set canvas scale to closest matching tile scale when zooming", None))
         self.checkBoxUseCache.setText(_translate("LoadTMSLayer", "Enable local disk cache - allows for offline operation", None))
         self.checkBoxClearCache.setText(_translate("LoadTMSLayer", "Clear disk cache", None))
 

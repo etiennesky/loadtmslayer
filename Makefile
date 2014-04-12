@@ -33,7 +33,7 @@ TRANSLATIONS =
 
 PLUGINNAME = loadtmslayer
 
-PY_FILES = loadtmslayer.py loadtmslayerdialog.py __init__.py
+PY_FILES = loadtmslayer.py loadtmslayerdialog.py __init__.py tilemapscalelevels.py
 
 EXTRAS = icon.png metadata.txt
 
